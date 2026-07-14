@@ -212,5 +212,6 @@ Three messy datasets included under sample_datasets/ for testing:
 
 ## Author
 
-Rahul — B.Tech Final Year Project
-Data Quality Intelligence Platform using Multi-Agent AI Systems
+Rahul, Ankur, Sachin, Shivanshu, Suryaprathap 
+— CDAC (BDA) Project
+— Multi-Agent AI-Based Automated Data Quality Intelligence Platform
