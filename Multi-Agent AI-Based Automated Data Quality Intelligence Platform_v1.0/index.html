@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Data Quality Platform</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f0f2f5;
+    color: #222;
+    min-height: 100vh;
+  }
+
+  /* ── NAVBAR ── */
+  .navbar {
+    background: #1a1a2e;
+    color: #fff;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .navbar-brand { font-size: 18px; font-weight: 700; letter-spacing: 0.3px; }
+  .navbar-brand span { color: #4ecca3; }
+  .navbar-links { display: flex; gap: 4px; }
+  .nav-link {
+    padding: 6px 14px; border-radius: 6px; font-size: 13px;
+    color: #aaa; cursor: pointer; border: none; background: none;
+    transition: all 0.15s;
+  }
+  .nav-link:hover { color: #fff; background: rgba(255,255,255,0.08); }
+  .nav-link.active { color: #fff; background: rgba(78,204,163,0.2); color: #4ecca3; }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 960px; margin: 0 auto; padding: 24px 16px 60px; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── CARDS ── */
+  .card {
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #dde1e7;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card-header {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  /* ── UPLOAD ── */
+  .upload-area {
+    border: 2px dashed #bbb;
+    border-radius: 8px;
+    padding: 44px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #fafafa;
+    position: relative;
+  }
+  .upload-area:hover, .upload-area.drag {
+    border-color: #4ecca3;
+    background: #f0faf7;
+  }
+  .upload-area input {
+    position: absolute; inset: 0; opacity: 0;
+    cursor: pointer; width: 100%; height: 100%;
+  }
+  .upload-icon { font-size: 40px; margin-bottom: 10px; }
+  .upload-area h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .upload-area p { font-size: 13px; color: #777; }
+  .upload-formats { margin-top: 12px; display: flex; gap: 6px; justify-content: center; }
+  .fmt-tag {
+    font-size: 11px; padding: 3px 10px; border-radius: 4px;
+    background: #e8eaf0; color: #555; border: 1px solid #ccc;
+  }
+
+  /* ── PROGRESS ── */
+  .progress-bar-wrap {
+    background: #e8eaf0; border-radius: 4px; height: 8px;
+    overflow: hidden; margin: 8px 0;
+  }
+  .progress-bar {
+    height: 100%; background: #4ecca3;
+    border-radius: 4px; transition: width 0.4s ease;
+  }
+  .steps-row {
+    display: flex; justify-content: space-between;
+    margin: 16px 0; font-size: 12px; color: #888;
+  }
+  .step-item { text-align: center; flex: 1; }
+  .step-item.done { color: #4ecca3; font-weight: 600; }
+  .step-item.active { color: #1a1a2e; font-weight: 600; }
+  .step-dot {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: #e8eaf0; border: 2px solid #ccc;
+    margin: 0 auto 4px; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700;
+  }
+  .step-item.done .step-dot { background: #4ecca3; border-color: #4ecca3; color: #fff; }
+  .step-item.active .step-dot { background: #1a1a2e; border-color: #1a1a2e; color: #fff; }
+  .spinner {
+    display: inline-block; width: 16px; height: 16px;
+    border: 2px solid #e8eaf0; border-top-color: #4ecca3;
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── TABS ── */
+  .tabs { display: flex; gap: 0; border-bottom: 2px solid #dde1e7; margin-bottom: 16px; }
+  .tab-btn {
+    padding: 9px 16px; font-size: 13px; font-weight: 500;
+    color: #777; cursor: pointer; border: none; background: none;
+    border-bottom: 2px solid transparent; margin-bottom: -2px;
+    transition: all 0.15s;
+  }
+  .tab-btn.active { color: #1a1a2e; border-bottom-color: #4ecca3; }
+  .tab-btn:hover:not(.active) { color: #333; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── SCORE ── */
+  .score-section { display: flex; gap: 24px; align-items: flex-start; }
+  .score-ring-box { text-align: center; flex-shrink: 0; }
+  .score-ring-box svg { display: block; }
+  .score-big { font-size: 32px; font-weight: 700; line-height: 1; }
+  .score-sub { font-size: 11px; color: #888; margin-top: 2px; }
+  .score-grade { font-size: 15px; font-weight: 700; margin-top: 4px; }
+  .comps-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .comp-item { }
+  .comp-label { font-size: 11px; color: #888; margin-bottom: 3px; }
+  .comp-bar-row { display: flex; align-items: center; gap: 7px; }
+  .comp-bar { flex: 1; height: 6px; background: #eee; border-radius: 3px; overflow: hidden; }
+  .comp-fill { height: 100%; border-radius: 3px; transition: width 0.7s ease; }
+  .comp-val { font-size: 12px; font-weight: 600; min-width: 34px; text-align: right; }
+
+  /* ── STAT BOXES ── */
+  .stat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 14px; }
+  .stat-box {
+    background: #f7f8fa; border: 1px solid #e0e3ea;
+    border-radius: 6px; padding: 12px; text-align: center;
+  }
+  .stat-val { font-size: 20px; font-weight: 700; color: #1a1a2e; line-height: 1; }
+  .stat-lbl { font-size: 11px; color: #888; margin-top: 3px; }
+
+  /* ── ISSUES ── */
+  .issue-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+  .issue-card {
+    border-radius: 6px; padding: 12px 14px;
+    border-left: 4px solid #ccc; background: #f9f9f9;
+  }
+  .issue-card.high { border-left-color: #e74c3c; background: #fef5f5; }
+  .issue-card.medium { border-left-color: #f39c12; background: #fef9f0; }
+  .issue-card.low { border-left-color: #3498db; background: #f0f7ff; }
+  .issue-type { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .issue-card.high .issue-type { color: #e74c3c; }
+  .issue-card.medium .issue-type { color: #f39c12; }
+  .issue-card.low .issue-type { color: #3498db; }
+  .issue-desc { font-size: 12px; color: #555; line-height: 1.4; }
+  .issue-count { font-size: 20px; font-weight: 700; margin-top: 6px; }
+  .issue-card.high .issue-count { color: #e74c3c; }
+  .issue-card.medium .issue-count { color: #f39c12; }
+  .issue-card.low .issue-count { color: #3498db; }
+
+  /* ── TABLE ── */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .data-table th {
+    text-align: left; padding: 8px 10px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.4px; color: #888; background: #f7f8fa;
+    border-bottom: 2px solid #e0e3ea;
+  }
+  .data-table td { padding: 8px 10px; border-bottom: 1px solid #eee; color: #444; }
+  .data-table td:first-child { font-weight: 600; color: #222; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .null-bar { height: 4px; background: #eee; border-radius: 2px; margin-top: 3px; overflow: hidden; }
+  .null-fill { height: 100%; border-radius: 2px; background: #f39c12; }
+
+  /* ── OUTLIERS ── */
+  .outlier-row {
+    display: flex; justify-content: space-between;
+    align-items: center; padding: 10px 0;
+    border-bottom: 1px solid #eee;
+  }
+  .outlier-row:last-child { border-bottom: none; }
+  .outlier-col { font-size: 13px; font-weight: 600; }
+  .outlier-meta { font-size: 11px; color: #888; margin-top: 2px; }
+  .outlier-pct { font-size: 13px; font-weight: 700; color: #f39c12; }
+
+  /* ── AI INSIGHT BOX ── */
+  .insight-box {
+    background: #f0f7ff; border: 1px solid #bee0ff;
+    border-radius: 6px; padding: 14px 16px; margin-bottom: 14px;
+  }
+  .insight-label { font-size: 11px; font-weight: 700; color: #2980b9; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .insight-text { font-size: 13px; color: #333; line-height: 1.7; }
+
+  /* ── RECOMMENDATIONS ── */
+  .rec-card {
+    border: 1px solid #dde1e7; border-radius: 6px;
+    padding: 12px 14px; margin-bottom: 8px;
+    display: flex; gap: 12px; align-items: flex-start;
+    cursor: pointer; transition: all 0.15s; user-select: none;
+    background: #fff;
+  }
+  .rec-card:hover { border-color: #4ecca3; }
+  .rec-card.selected { border-color: #4ecca3; background: #f0faf7; }
+  .rec-check {
+    width: 18px; height: 18px; border-radius: 4px;
+    border: 2px solid #ccc; flex-shrink: 0; margin-top: 1px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; transition: all 0.15s;
+  }
+  .rec-card.selected .rec-check { background: #4ecca3; border-color: #4ecca3; color: #fff; }
+  .rec-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .rec-desc { font-size: 12px; color: #666; line-height: 1.5; }
+
+  /* ── DECISION ── */
+  .decision-box {
+    background: #f7f8fa; border: 1px solid #dde1e7;
+    border-radius: 8px; padding: 20px; text-align: center; margin-top: 16px;
+  }
+  .decision-box h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .decision-box p { font-size: 13px; color: #666; margin-bottom: 16px; }
+  .btn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    padding: 10px 22px; border-radius: 6px; font-size: 13px;
+    font-weight: 600; cursor: pointer; border: none; transition: all 0.15s;
+  }
+  .btn-primary { background: #1a1a2e; color: #fff; }
+  .btn-primary:hover { background: #2a2a4e; }
+  .btn-primary:disabled { background: #aaa; cursor: not-allowed; }
+  .btn-success { background: #4ecca3; color: #1a1a2e; }
+  .btn-success:hover { background: #3dba92; }
+  .btn-success:disabled { background: #aaa; color: #fff; cursor: not-allowed; }
+  .btn-outline { background: #fff; color: #555; border: 1px solid #ccc; }
+  .btn-outline:hover { background: #f0f2f5; color: #333; }
+
+  /* ── BEFORE/AFTER ── */
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .cmp-card { border-radius: 8px; padding: 18px; text-align: center; }
+  .cmp-before { background: #fef5f5; border: 1px solid #f5c6c6; }
+  .cmp-after  { background: #f0faf7; border: 1px solid #b2e8d7; }
+  .cmp-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .cmp-before .cmp-label { color: #e74c3c; }
+  .cmp-after  .cmp-label { color: #27ae60; }
+  .cmp-score { font-size: 42px; font-weight: 700; line-height: 1; }
+  .cmp-before .cmp-score { color: #e74c3c; }
+  .cmp-after  .cmp-score { color: #27ae60; }
+  .cmp-grade { font-size: 13px; color: #888; margin-top: 5px; font-weight: 500; }
+  .delta-row { text-align: center; margin: 12px 0; }
+  .delta-badge {
+    display: inline-block; padding: 6px 18px;
+    background: #eafaf1; border: 1px solid #a9dfbf;
+    border-radius: 20px; font-size: 16px;
+    font-weight: 700; color: #27ae60;
+  }
+
+  /* ── CLEAN LOG ── */
+  .clean-item {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 9px 0; border-bottom: 1px solid #eee;
+  }
+  .clean-item:last-child { border-bottom: none; }
+  .clean-icon {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #eafaf1; border: 1px solid #4ecca3;
+    color: #27ae60; display: flex; align-items: center;
+    justify-content: center; font-size: 11px; flex-shrink: 0; margin-top: 1px;
+  }
+  .clean-title { font-size: 13px; font-weight: 600; }
+  .clean-detail { font-size: 12px; color: #666; margin-top: 2px; }
+
+  /* ── DOWNLOAD ── */
+  .download-box {
+    background: #f0faf7; border: 1px solid #b2e8d7;
+    border-radius: 8px; padding: 20px; text-align: center; margin-top: 14px;
+  }
+  .download-box h3 { font-size: 15px; font-weight: 700; margin-bottom: 5px; }
+  .download-box p { font-size: 12px; color: #666; margin-bottom: 14px; }
+  .dl-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+  /* ── BADGE ── */
+  .badge {
+    display: inline-block; padding: 2px 8px;
+    border-radius: 4px; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  .badge-high   { background: #fde8e8; color: #c0392b; }
+  .badge-medium { background: #fef3cd; color: #856404; }
+  .badge-low    { background: #d1ecf1; color: #0c5460; }
+  .badge-ok     { background: #d4edda; color: #155724; }
+  .badge-blue   { background: #d1e7ff; color: #0a58ca; }
+
+  /* ── HISTORY / DB ── */
+  .page-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .page-sub { font-size: 13px; color: #777; margin-bottom: 20px; }
+  .ds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .ds-card {
+    background: #fff; border: 1px solid #dde1e7;
+    border-radius: 8px; padding: 16px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .ds-card:hover, .ds-card.active { border-color: #4ecca3; box-shadow: 0 2px 8px rgba(78,204,163,0.15); }
+  .ds-icon { font-size: 28px; margin-bottom: 8px; }
+  .ds-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; word-break: break-word; }
+  .ds-meta { font-size: 11px; color: #888; line-height: 1.5; }
+  .jobs-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .jobs-table th {
+    text-align: left; padding: 9px 12px;
+    background: #f7f8fa; border-bottom: 2px solid #e0e3ea;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; color: #888;
+  }
+  .jobs-table td { padding: 9px 12px; border-bottom: 1px solid #eee; color: #444; vertical-align: middle; }
+  .jobs-table tr:last-child td { border-bottom: none; }
+  .jobs-table tr:hover td { background: #fafafa; }
+  .link-btn {
+    font-size: 11px; padding: 4px 10px; border-radius: 4px;
+    border: 1px solid #dde1e7; background: #fff; color: #555;
+    cursor: pointer; text-decoration: none; display: inline-block;
+    transition: all 0.13s;
+  }
+  .link-btn:hover { border-color: #4ecca3; color: #27ae60; }
+  .link-btn.green { border-color: #4ecca3; color: #27ae60; background: #f0faf7; }
+
+  /* ── MISC ── */
+  .alert { border-radius: 6px; padding: 12px 14px; font-size: 13px; margin-bottom: 12px; }
+  .alert-danger { background: #fde8e8; border: 1px solid #f5c6c6; color: #c0392b; }
+  .alert-info   { background: #d1e7ff; border: 1px solid #b6d4fe; color: #084298; }
+  .hidden { display: none !important; }
+  .text-center { text-align: center; }
+  .text-muted { color: #888; font-size: 12px; }
+  .empty-state { text-align: center; padding: 44px 20px; color: #aaa; }
+  .empty-state .big { font-size: 44px; margin-bottom: 12px; }
+  .section-title { font-size: 13px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  @media(max-width:600px){
+    .stat-grid{grid-template-columns:1fr 1fr}
+    .compare-grid{grid-template-columns:1fr}
+    .comps-grid{grid-template-columns:1fr}
+    .score-section{flex-direction:column}
+  }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <div class="navbar-brand">Data<span>Quality</span> Platform</div>
+  <div class="navbar-links">
+    <button class="nav-link active" onclick="switchPage('analyse')">⚡ Analyse</button>
+    <button class="nav-link" onclick="switchPage('history')">🗄 Database</button>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ════════════ ANALYSE PAGE ════════════ -->
+<div class="page active" id="page-analyse">
+
+  <!-- UPLOAD -->
+  <div id="s-upload">
+    <div style="text-align:center;margin:8px 0 20px">
+      <h2 style="font-size:22px;font-weight:700;margin-bottom:6px">Upload your dataset</h2>
+      <p style="color:#666;font-size:14px">The system will analyse quality, find issues, score your data, and help you clean it.</p>
+    </div>
+    <div class="card">
+      <div class="upload-area" id="zone">
+        <input type="file" id="file-in" accept=".csv,.xlsx,.xls"/>
+        <div class="upload-icon">📂</div>
+        <h3>Click to upload or drag and drop</h3>
+        <p>Supports CSV and Excel files</p>
+        <div class="upload-formats">
+          <span class="fmt-tag">CSV</span>
+          <span class="fmt-tag">XLSX</span>
+          <span class="fmt-tag">XLS</span>
+        </div>
+      </div>
+      <div id="upload-err" class="alert alert-danger hidden" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <!-- PROCESSING -->
+  <div id="s-processing" class="hidden">
+    <div class="card">
+      <div class="card-header">⚙ Processing pipeline</div>
+      <div class="steps-row" id="steps-row">
+        <div class="step-item" id="st0"><div class="step-dot">1</div>Validate</div>
+        <div class="step-item" id="st1"><div class="step-dot">2</div>Profile</div>
+        <div class="step-item" id="st2"><div class="step-dot">3</div>Quality</div>
+        <div class="step-item" id="st3"><div class="step-dot">4</div>Anomalies</div>
+        <div class="step-item" id="st4"><div class="step-dot">5</div>Insights</div>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="prog-bar" style="width:10%"></div></div>
+      <p style="font-size:13px;color:#666;margin-top:10px;text-align:center">
+        <span class="spinner"></span>
+        <span id="s-msg" style="margin-left:8px">Initialising agents…</span>
+      </p>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="s-results" class="hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:#888;margin-bottom:2px">Dataset</div>
+        <div style="font-size:17px;font-weight:700" id="r-fname">—</div>
+      </div>
+      <button class="btn btn-outline" onclick="resetApp()" style="font-size:12px">↩ New upload</button>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-box"><div class="stat-val" id="r-rows">—</div><div class="stat-lbl">Total rows</div></div>
+      <div class="stat-box"><div class="stat-val" id="r-cols">—</div><div class="stat-lbl">Columns</div></div>
+      <div class="stat-box"><div class="stat-val" id="r-issues">—</div><div class="stat-lbl">Issues found</div></div>
+      <div class="stat-box"><div class="stat-val" id="r-nulls">—</div><div class="stat-lbl">Missing cells</div></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="tab('overview')">Overview</button>
+      <button class="tab-btn" onclick="tab('profile')">Column Profile</button>
+      <button class="tab-btn" onclick="tab('issues')">Issues</button>
+      <button class="tab-btn" onclick="tab('action')">AI Recommendations</button>
+    </div>
+
+    <!-- Tab: Overview -->
+    <div class="tab-panel active" id="tp-overview">
+      <div class="card">
+        <div class="card-header">📊 Data quality score</div>
+        <div class="score-section">
+          <div class="score-ring-box">
+            <svg width="120" height="120" viewBox="0 0 120 120" style="transform:rotate(-90deg)">
+              <circle cx="60" cy="60" r="50" fill="none" stroke="#e8eaf0" stroke-width="10"/>
+              <circle id="score-ring" cx="60" cy="60" r="50" fill="none" stroke="#4ecca3" stroke-width="10"
+                stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="314.16"/>
+            </svg>
+            <div class="score-big" id="r-score">—</div>
+            <div class="score-sub">out of 100</div>
+            <div class="score-grade" id="r-grade">—</div>
+          </div>
+          <div class="comps-grid" id="comps-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Profile -->
+    <div class="tab-panel" id="tp-profile">
+      <div class="card">
+        <div class="card-header">📋 Column profiles</div>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr><th>Column</th><th>Type</th><th>Nulls</th><th>Unique</th><th>Stats / Top values</th></tr></thead>
+            <tbody id="profile-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Issues -->
+    <div class="tab-panel" id="tp-issues">
+      <div class="card">
+        <div class="card-header">⚠ Detected issues</div>
+        <div class="issue-grid" id="issue-grid"></div>
+      </div>
+      <div class="card" id="outlier-card">
+        <div class="card-header">📈 Outlier columns (IQR method)</div>
+        <div id="outlier-list"></div>
+      </div>
+    </div>
+
+    <!-- Tab: AI + Decision -->
+    <div class="tab-panel" id="tp-action">
+      <div class="insight-box">
+        <div class="insight-label">🤖 AI analysis</div>
+        <div class="insight-text" id="ai-text">—</div>
+      </div>
+      <div class="section-title" style="margin-bottom:10px">Select cleaning actions to apply</div>
+      <div id="recs-list"></div>
+      <div class="decision-box">
+        <h3>Choose what to do next</h3>
+        <p>Select the actions you want to apply above, then click Approve. Or skip to keep data as-is.</p>
+        <div class="btn-row">
+          <button class="btn btn-outline" onclick="decide('skip')">Skip — just show report</button>
+          <button class="btn btn-success" id="btn-approve" onclick="decide('approve')" disabled>
+            ✓ Apply cleaning
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLEANING -->
+  <div id="s-cleaning" class="hidden">
+    <div class="card text-center" style="padding:32px">
+      <div style="font-size:36px;margin-bottom:12px">🧹</div>
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:6px">Cleaning in progress…</h3>
+      <p style="font-size:13px;color:#666;margin-bottom:14px">Applying your selected operations to a copy of the dataset.</p>
+      <span class="spinner"></span>
+    </div>
+  </div>
+
+  <!-- COMPLETE -->
+  <div id="s-complete" class="hidden">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:36px;margin-bottom:8px">✅</div>
+      <h2 style="font-size:20px;font-weight:700;margin-bottom:4px">Done!</h2>
+      <p id="c-sub" style="font-size:13px;color:#666">Saved to database.</p>
+    </div>
+
+    <!-- Skip result -->
+    <div id="c-skip">
+      <div class="card">
+        <div class="card-header">📊 Dataset summary</div>
+        <div class="stat-grid" style="margin-bottom:0">
+          <div class="stat-box"><div class="stat-val" id="cs-rows">—</div><div class="stat-lbl">Rows</div></div>
+          <div class="stat-box"><div class="stat-val" id="cs-nulls">—</div><div class="stat-lbl">Missing cells</div></div>
+          <div class="stat-box"><div class="stat-val" id="cs-dupes">—</div><div class="stat-lbl">Duplicates</div></div>
+          <div class="stat-box"><div class="stat-val" id="cs-out">—</div><div class="stat-lbl">Outliers</div></div>
+        </div>
+      </div>
+      <div class="card text-center">
+        <div class="card-header" style="justify-content:center">Quality score (original data)</div>
+        <div style="font-size:52px;font-weight:700;color:#f39c12;padding:10px 0" id="cs-score">—</div>
+      </div>
+    </div>
+
+    <!-- Approve result -->
+    <div id="c-approve" class="hidden">
+      <div class="card">
+        <div class="card-header">📊 Before vs after cleaning</div>
+        <div class="compare-grid">
+          <div class="cmp-card cmp-before">
+            <div class="cmp-label">Original</div>
+            <div class="cmp-score" id="ca-before">—</div>
+            <div class="cmp-grade" id="ca-bg">—</div>
+          </div>
+          <div class="cmp-card cmp-after">
+            <div class="cmp-label">After cleaning</div>
+            <div class="cmp-score" id="ca-after">—</div>
+            <div class="cmp-grade" id="ca-ag">—</div>
+          </div>
+        </div>
+        <div class="delta-row"><span class="delta-badge" id="delta-badge">—</span></div>
+      </div>
+      <div class="card">
+        <div class="card-header">🧹 Cleaning log</div>
+        <div id="clean-log"></div>
+      </div>
+    </div>
+
+    <!-- Download + actions -->
+    <div class="download-box">
+      <h3>Files saved to database</h3>
+      <p>Download your files below. All jobs are stored in the Database tab for future access.</p>
+      <div class="dl-btns">
+        <button class="btn btn-success hidden" id="dl-clean" onclick="doDownload('clean')">⬇ Download cleaned dataset</button>
+        <button class="btn btn-outline" id="dl-raw" onclick="doDownload('raw')">⬇ Download original dataset</button>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:16px;display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-outline" onclick="resetApp()">↩ Analyse another dataset</button>
+      <button class="btn btn-primary" onclick="switchPage('history')">🗄 View in Database</button>
+    </div>
+  </div>
+
+</div><!-- /page-analyse -->
+
+
+<!-- ════════════ HISTORY PAGE ════════════ -->
+<div class="page" id="page-history">
+  <div class="page-title">🗄 Database</div>
+  <div class="page-sub">All your dataset analyses are stored here. Click a folder to view jobs and download files.</div>
+
+  <div id="hist-err" class="alert alert-danger hidden"></div>
+
+  <div id="hist-empty" class="empty-state hidden">
+    <div class="big">📂</div>
+    <p>No datasets yet.<br/>Upload a file to get started.</p>
+  </div>
+
+  <div id="hist-content" class="hidden">
+    <div class="section-title">Dataset folders</div>
+    <div class="ds-grid" id="ds-grid"></div>
+
+    <div id="jobs-section" class="hidden">
+      <div class="section-title" id="jobs-section-title">Jobs</div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table class="jobs-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Rows</th>
+              <th>Score before</th>
+              <th>Score after</th>
+              <th>Decision</th>
+              <th>Files</th>
+            </tr>
+          </thead>
+          <tbody id="jobs-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:12px">
+    <button class="btn btn-outline" style="font-size:12px" onclick="loadHistory()">↻ Refresh</button>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<script>
+const API = 'http://localhost:8000/api';
+let JOB = null, TIMER = null, DATA = null, SEL = new Set();
+
+const STEP_PROGRESS = { validating:15, profiling:35, analyzing:55, scoring:70, generating_insights:88, awaiting_decision:100 };
+const STEP_IDX      = { validating:0, profiling:1, analyzing:2, scoring:3, generating_insights:4, awaiting_decision:4 };
+const STEP_MSG      = { validating:'Validating file format and schema…', profiling:'Profiling all columns…', analyzing:'Detecting quality issues and duplicates…', scoring:'Calculating quality score…', generating_insights:'Generating AI recommendations…' };
+const COMP_COLORS   = { completeness:'#3498db', uniqueness:'#4ecca3', validity:'#9b59b6', consistency:'#f39c12', accuracy:'#e74c3c' };
+const GRADE_COLORS  = { A:'#27ae60', B:'#2ecc71', C:'#f39c12', D:'#e74c3c' };
+
+// ── PAGE SWITCHING ─────────────────────────────────────────────────────────
+function switchPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  if (name === 'history') loadHistory();
+}
+
+// ── UPLOAD ─────────────────────────────────────────────────────────────────
+const zone = document.getElementById('zone');
+const fi   = document.getElementById('file-in');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
+zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag'); if (e.dataTransfer.files[0]) upload(e.dataTransfer.files[0]); });
+fi.addEventListener('change', () => { if (fi.files[0]) upload(fi.files[0]); });
+
+async function upload(file) {
+  setErr('');
+  const fd = new FormData(); fd.append('file', file);
+  try {
+    const r = await fetch(`${API}/upload`, { method: 'POST', body: fd });
+    const d = await r.json();
+    if (!r.ok) { setErr(d.detail || 'Upload failed.'); return; }
+    JOB = d.job_id;
+    show('processing');
+    TIMER = setInterval(poll, 1800);
+  } catch(e) {
+    setErr('Cannot connect to server. Run: python -m uvicorn main:app --reload --port 8000');
+  }
+}
+
+// ── POLL ───────────────────────────────────────────────────────────────────
+async function poll() {
+  try {
+    const r = await fetch(`${API}/status/${JOB}`);
+    const d = await r.json(); DATA = d;
+    const st = d.status;
+
+    // update steps
+    const idx = STEP_IDX[st] ?? -1;
+    for (let i = 0; i <= 4; i++) {
+      const el = document.getElementById('st' + i);
+      el.classList.remove('done', 'active');
+      if (i < idx) el.classList.add('done');
+      else if (i === idx) el.classList.add('active');
+    }
+    document.getElementById('prog-bar').style.width = (STEP_PROGRESS[st] || 10) + '%';
+    document.getElementById('s-msg').textContent = STEP_MSG[st] || st;
+
+    if (st === 'failed') {
+      clearInterval(TIMER);
+      document.getElementById('s-msg').textContent = '❌ Error: ' + (d.error || 'Something went wrong.');
+      return;
+    }
+    if (st === 'awaiting_decision') { clearInterval(TIMER); renderResults(d); show('results'); return; }
+    if (st === 'complete') { clearInterval(TIMER); renderComplete(d, d.cleaning_result ? 'approve' : 'skip'); show('complete'); }
+  } catch(e) { /* retry */ }
+}
+
+// ── RENDER RESULTS ─────────────────────────────────────────────────────────
+function renderResults(d) {
+  const { profile, quality, anomaly, score_before: sc, insights, filename } = d;
+
+  document.getElementById('r-fname').textContent = filename || 'dataset';
+  document.getElementById('r-rows').textContent   = profile.total_rows.toLocaleString();
+  document.getElementById('r-cols').textContent   = profile.total_columns;
+  document.getElementById('r-issues').textContent = quality.issue_count + anomaly.outlier_column_count;
+  document.getElementById('r-nulls').textContent  = profile.total_nulls.toLocaleString();
+
+  // Score ring
+  const circ = 314.16, off = circ * (1 - sc.overall / 100);
+  const ring = document.getElementById('score-ring');
+  setTimeout(() => { ring.style.strokeDashoffset = off; ring.style.transition = 'stroke-dashoffset 1s ease'; ring.style.stroke = GRADE_COLORS[sc.grade] || '#4ecca3'; }, 80);
+  document.getElementById('r-score').textContent = sc.overall;
+  const grEl = document.getElementById('r-grade');
+  grEl.textContent = 'Grade ' + sc.grade;
+  grEl.style.color = GRADE_COLORS[sc.grade] || '#333';
+
+  // Components
+  const cg = document.getElementById('comps-grid'); cg.innerHTML = '';
+  for (const [k, v] of Object.entries(sc.components)) {
+    const c = COMP_COLORS[k] || '#4ecca3';
+    cg.innerHTML += `<div class="comp-item">
+      <div class="comp-label">${k.charAt(0).toUpperCase()+k.slice(1)}</div>
+      <div class="comp-bar-row">
+        <div class="comp-bar"><div class="comp-fill" style="width:${v}%;background:${c}"></div></div>
+        <div class="comp-val" style="color:${c}">${v}%</div>
+      </div></div>`;
+  }
+
+  // Profile table
+  const tb = document.getElementById('profile-body'); tb.innerHTML = '';
+  for (const [col, cp] of Object.entries(profile.column_profiles)) {
+    const stats = cp.mean !== undefined
+      ? `min: ${cp.min} · max: ${cp.max} · avg: ${cp.mean}`
+      : Object.keys(cp.top_values || {}).slice(0, 3).join(', ') || '—';
+    tb.innerHTML += `<tr>
+      <td>${col}</td>
+      <td><span class="badge badge-blue">${cp.dtype}</span></td>
+      <td>${cp.null_count} <span class="text-muted">(${cp.null_pct}%)</span>
+        <div class="null-bar"><div class="null-fill" style="width:${Math.min(cp.null_pct,100)}%"></div></div></td>
+      <td>${cp.unique_count}</td>
+      <td style="color:#888;font-size:11px">${stats}</td></tr>`;
+  }
+
+  // Issues
+  const ig = document.getElementById('issue-grid'); ig.innerHTML = '';
+  const TL = { missing_values:'Missing values', duplicates:'Duplicates', invalid_email:'Invalid emails', invalid_phone:'Invalid phones', out_of_range:'Impossible values', constant_column:'Constant column' };
+  if (!quality.issues.length) {
+    ig.innerHTML = '<p style="color:#27ae60;font-size:13px">✅ No data quality issues detected.</p>';
+  } else {
+    for (const iss of quality.issues) {
+      ig.innerHTML += `<div class="issue-card ${iss.severity}">
+        <div class="issue-type">${iss.severity}</div>
+        <div class="issue-desc">${TL[iss.type] || iss.type}</div>
+        <div class="issue-count">${iss.affected_rows}</div>
+        <div style="font-size:10px;color:#999;margin-top:2px">${iss.column !== 'all' ? 'Col: ' + iss.column : 'All columns'}</div>
+      </div>`;
+    }
+  }
+
+  // Outliers
+  const oc = document.getElementById('outlier-card'), ol = document.getElementById('outlier-list');
+  if (!anomaly.outliers.length) { oc.classList.add('hidden'); }
+  else {
+    ol.innerHTML = '';
+    for (const o of anomaly.outliers) {
+      ol.innerHTML += `<div class="outlier-row">
+        <div>
+          <div class="outlier-col">${o.column} <span class="badge badge-${o.severity}">${o.severity}</span></div>
+          <div class="outlier-meta">${o.outlier_count} outliers · bounds: [${o.lower_bound}, ${o.upper_bound}]</div>
+        </div>
+        <div class="outlier-pct">${o.outlier_pct}%</div>
+      </div>`;
+    }
+  }
+
+  // AI
+  document.getElementById('ai-text').textContent = insights.executive_summary || '—';
+
+  // Recs
+  const rl = document.getElementById('recs-list'); rl.innerHTML = ''; SEL.clear();
+  for (const rec of (insights.recommendations || [])) {
+    rl.innerHTML += `<div class="rec-card" id="rec-${rec.id}" onclick="toggleRec('${rec.id}')">
+      <div class="rec-check" id="chk-${rec.id}"></div>
+      <div>
+        <div class="rec-title">${rec.label}</div>
+        <div class="rec-desc">${rec.impact || rec.description}</div>
+      </div>
+    </div>`;
+  }
+  updBtn();
+}
+
+function toggleRec(id) {
+  if (SEL.has(id)) {
+    SEL.delete(id);
+    document.getElementById('rec-' + id).classList.remove('selected');
+    document.getElementById('chk-' + id).textContent = '';
+  } else {
+    SEL.add(id);
+    document.getElementById('rec-' + id).classList.add('selected');
+    document.getElementById('chk-' + id).textContent = '✓';
+  }
+  updBtn();
+}
+function updBtn() {
+  const b = document.getElementById('btn-approve');
+  b.disabled = SEL.size === 0;
+  b.textContent = SEL.size ? `✓ Apply ${SEL.size} action${SEL.size > 1 ? 's' : ''}` : '✓ Apply cleaning';
+}
+
+// ── TABS ───────────────────────────────────────────────────────────────────
+function tab(name) {
+  const names = ['overview', 'profile', 'issues', 'action'];
+  document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', names[i] === name));
+  names.forEach(n => document.getElementById('tp-' + n).classList.toggle('active', n === name));
+}
+
+// ── DECIDE ─────────────────────────────────────────────────────────────────
+async function decide(action) {
+  const body = { action };
+  if (action === 'approve') body.approved_actions = [...SEL];
+  if (action === 'approve') show('cleaning');
+  try {
+    const r = await fetch(`${API}/decide/${JOB}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const d = await r.json();
+    if (!r.ok) { alert(d.detail || 'Error'); if (action === 'approve') show('results'); return; }
+    if (action === 'skip') { renderComplete(DATA, 'skip'); show('complete'); }
+    else { TIMER = setInterval(poll, 1800); }
+  } catch(e) { alert('Error. Please try again.'); if (action === 'approve') show('results'); }
+}
+
+// ── COMPLETE ───────────────────────────────────────────────────────────────
+function renderComplete(d, path) {
+  const dlC = document.getElementById('dl-clean');
+  if (path === 'skip') {
+    document.getElementById('c-sub').textContent = 'Analysis saved to database.';
+    document.getElementById('c-skip').classList.remove('hidden');
+    document.getElementById('c-approve').classList.add('hidden');
+    dlC.classList.add('hidden');
+    const p = d.profile, q = d.quality, an = d.anomaly, s = d.score_before;
+    document.getElementById('cs-rows').textContent  = (p?.total_rows || 0).toLocaleString();
+    document.getElementById('cs-nulls').textContent = (p?.total_nulls || 0).toLocaleString();
+    const di = q?.issues?.find(i => i.type === 'duplicates');
+    document.getElementById('cs-dupes').textContent = di ? di.affected_rows : 0;
+    document.getElementById('cs-out').textContent   = an?.total_outlier_rows || 0;
+    document.getElementById('cs-score').textContent = s?.overall ?? '—';
+  } else {
+    document.getElementById('c-sub').textContent = 'Raw + cleaned files saved to database.';
+    document.getElementById('c-skip').classList.add('hidden');
+    document.getElementById('c-approve').classList.remove('hidden');
+    dlC.classList.remove('hidden');
+    const sb = d.score_before, sa = d.score_after;
+    const delta = sa && sb ? (sa.overall - sb.overall).toFixed(1) : '—';
+    document.getElementById('ca-before').textContent = sb?.overall ?? '—';
+    document.getElementById('ca-bg').textContent     = 'Grade ' + (sb?.grade ?? '—');
+    document.getElementById('ca-after').textContent  = sa?.overall ?? '—';
+    document.getElementById('ca-ag').textContent     = 'Grade ' + (sa?.grade ?? '—');
+    document.getElementById('delta-badge').textContent = `+${delta} points improvement`;
+    const cl = document.getElementById('clean-log'); cl.innerHTML = '';
+    for (const e of (d.cleaning_result?.log || [])) {
+      cl.innerHTML += `<div class="clean-item">
+        <div class="clean-icon">✓</div>
+        <div><div class="clean-title">${e.label}</div><div class="clean-detail">${e.detail}</div></div>
+      </div>`;
+    }
+  }
+}
+
+function doDownload(type) {
+  if (type === 'clean') window.location.href = `${API}/download/${JOB}`;
+  else window.location.href = `${API}/download-raw/${JOB}`;
+}
+
+// ── HISTORY ────────────────────────────────────────────────────────────────
+async function loadHistory() {
+  document.getElementById('hist-empty').classList.add('hidden');
+  document.getElementById('hist-content').classList.add('hidden');
+  document.getElementById('hist-err').classList.add('hidden');
+  document.getElementById('jobs-section').classList.add('hidden');
+  try {
+    const [dsRes, jobsRes] = await Promise.all([fetch(`${API}/datasets`), fetch(`${API}/history`)]);
+    const datasets = await dsRes.json(), allJobs = await jobsRes.json();
+    if (!datasets.length) { document.getElementById('hist-empty').classList.remove('hidden'); return; }
+    document.getElementById('hist-content').classList.remove('hidden');
+    renderDatasets(datasets, allJobs);
+  } catch(e) {
+    document.getElementById('hist-err').textContent = 'Could not connect to server.';
+    document.getElementById('hist-err').classList.remove('hidden');
+  }
+}
+
+function renderDatasets(datasets, allJobs) {
+  const byDs = {};
+  for (const j of allJobs) { if (!byDs[j.dataset_name]) byDs[j.dataset_name] = []; byDs[j.dataset_name].push(j); }
+  const grid = document.getElementById('ds-grid'); grid.innerHTML = '';
+  for (const ds of datasets) {
+    const jobs = byDs[ds.dataset_name] || [];
+    const date = ds.last_used ? new Date(ds.last_used).toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'}) : '—';
+    const card = document.createElement('div');
+    card.className = 'ds-card';
+    card.innerHTML = `<div class="ds-icon">📁</div>
+      <div class="ds-name">${ds.dataset_name}</div>
+      <div class="ds-meta">${ds.total_jobs} run${ds.total_jobs!==1?'s':''} · Last: ${date}</div>
+      <div style="margin-top:6px">
+        ${ds.total_jobs > 0 ? `<span class="badge badge-blue">${ds.total_jobs} jobs</span>` : ''}
+        ${ds.cleaned_jobs > 0 ? `<span class="badge badge-ok" style="margin-left:4px">✓ Cleaned</span>` : ''}
+      </div>`;
+    card.onclick = () => { document.querySelectorAll('.ds-card').forEach(c=>c.classList.remove('active')); card.classList.add('active'); showJobs(ds.dataset_name, jobs); };
+    grid.appendChild(card);
+  }
+}
+
+function showJobs(name, jobs) {
+  document.getElementById('jobs-section').classList.remove('hidden');
+  document.getElementById('jobs-section-title').textContent = `Jobs for: ${name} (${jobs.length} total)`;
+  const tb = document.getElementById('jobs-body'); tb.innerHTML = '';
+  for (const j of jobs) {
+    const date = j.created_at ? new Date(j.created_at + 'Z').toLocaleString('en-GB', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
+    const decLabel = j.decision === 'approve' ? '<span class="badge badge-ok">Cleaned</span>' : j.decision === 'skip' ? '<span class="badge badge-medium">Skipped</span>' : '<span class="badge badge-blue">Processing</span>';
+    tb.innerHTML += `<tr>
+      <td>${date}</td>
+      <td>${j.rows || '—'}</td>
+      <td style="font-weight:600;color:#e74c3c">${j.score_before || '—'}</td>
+      <td style="font-weight:600;color:#27ae60">${j.score_after || '—'}</td>
+      <td>${decLabel}</td>
+      <td>
+        <a class="link-btn" style="margin-right:4px" href="${API}/history/${j.job_id}/files/raw.csv" onclick="dlFile(event,'${j.job_id}','raw')">Raw</a>
+        ${j.has_cleaned ? `<a class="link-btn green" href="#" onclick="dlFile(event,'${j.job_id}','cleaned')">Cleaned</a>` : ''}
+      </td>
+    </tr>`;
+  }
+}
+
+async function dlFile(e, jobId, type) {
+  e.preventDefault();
+  try {
+    const r = await fetch(`${API}/history/${jobId}`);
+    const d = await r.json();
+    const files = d.files || [];
+    const fname = files.find(f => f.startsWith(type));
+    if (fname) window.location.href = `${API}/history/${jobId}/files/${fname}`;
+    else alert('File not found.');
+  } catch(err) { alert('Download failed.'); }
+}
+
+// ── UTILS ──────────────────────────────────────────────────────────────────
+function show(name) {
+  ['upload','processing','results','cleaning','complete'].forEach(s =>
+    document.getElementById('s-' + s).classList.toggle('hidden', s !== name));
+}
+function setErr(msg) {
+  const el = document.getElementById('upload-err');
+  el.textContent = msg; el.classList.toggle('hidden', !msg);
+}
+function resetApp() {
+  clearInterval(TIMER); JOB = null; DATA = null; SEL.clear();
+  document.getElementById('file-in').value = '';
+  setErr(''); show('upload');
+}
+</script>
+</body>
+</html>

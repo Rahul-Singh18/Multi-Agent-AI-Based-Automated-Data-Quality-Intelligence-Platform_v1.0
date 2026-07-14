@@ -1,0 +1,31 @@
+order_id,customer_name,customer_email,product,quantity,unit_price,total_amount,order_date,region,status
+1001,John Smith,john.smith@email.com,Laptop,2,850.00,1700.00,2024-01-05,North,Completed
+1002,Mary Jane,mary_AT_email.com,Mouse,1,25.00,25.00,2024-01-07,South,Completed
+1003,Peter Parker,,Keyboard,3,45.00,135.00,2024-01-08,East,Pending
+1004,Tony Stark,tony@stark.com,Monitor,1,320.00,,2024-01-10,West,Completed
+1005,Bruce Wayne,bruce@wayne.com,Laptop,1,850.00,850.00,2024-01-12,North,Completed
+1006,Clark Kent,clark@daily.com,Headphones,2,75.00,150.00,2024-01-14,South,Shipped
+1007,John Smith,john.smith@email.com,Laptop,2,850.00,1700.00,2024-01-05,North,Completed
+1008,Diana Prince,diana@email.com,Webcam,-1,60.00,-60.00,2024-01-15,East,Returned
+1009,Barry Allen,barry@email.com,USB Hub,5,18.00,90.00,2024-01-17,West,Completed
+1010,Hal Jordan,hal@@email.com,Monitor,1,320.00,320.00,2024-01-18,North,Completed
+1011,Oliver Queen,,Laptop,1,850.00,850.00,2024-01-20,South,Pending
+1012,Natasha Romanoff,natasha@email.com,Mouse,10,25.00,250.00,2024-01-21,East,Completed
+1013,Steve Rogers,steveATgmail.com,Keyboard,2,45.00,90.00,2024-01-22,West,Completed
+1014,Sam Wilson,sam@email.com,Headphones,1,75.00,75.00,2024-01-23,North,Shipped
+1015,Wanda Maximoff,wanda@email.com,,2,30.00,60.00,2024-01-24,South,Completed
+1016,Vision Bot,vision@email.com,Monitor,1,320.00,9999999.00,2024-02-01,East,Completed
+1017,Scott Lang,scott@email.com,Webcam,3,60.00,180.00,2024-02-02,West,Completed
+1018,Hope Van Dyne,,Laptop,1,850.00,850.00,2024-02-03,North,Completed
+1019,T Challa,tchalla@email.com,USB Hub,2,18.00,36.00,2024-02-04,South,Completed
+1020,Shuri Tech,shuri@email.com,Keyboard,5,45.00,225.00,2024-02-05,East,Pending
+1021,Peter Parker,,Keyboard,3,45.00,135.00,2024-01-08,East,Pending
+1022,Bruce Banner,bruce.banner@email.com,Monitor,2,320.00,640.00,2024-02-07,West,Completed
+1023,Thor Odinson,thor_email_invalid,Headphones,4,75.00,300.00,2024-02-08,North,Completed
+1024,Loki Laufeyson,loki@email.com,Mouse,1,25.00,25.00,2024-02-09,South,Completed
+1025,Nick Fury,nick@shield.com,Laptop,3,850.00,2550.00,2024-02-10,East,Shipped
+1026,Maria Hill,maria@shield.com,Webcam,2,60.00,120.00,2024-02-11,West,Completed
+1027,Phil Coulson,phil@shield.com,,1,45.00,45.00,2024-02-12,North,Completed
+1028,Clint Barton,clint@email.com,USB Hub,8,18.00,144.00,2024-02-13,South,Completed
+1029,Jessica Jones,jessica@email.com,Monitor,1,320.00,320.00,2024-02-14,East,Pending
+1030,Luke Cage,luke@email.com,Laptop,2,850.00,0.00,2024-02-15,West,Completed
