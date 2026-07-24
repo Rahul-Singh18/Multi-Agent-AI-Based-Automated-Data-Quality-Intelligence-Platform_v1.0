@@ -1,4 +1,4 @@
-# Data Quality Intelligence Platform
+ # Data Quality Intelligence Platform
 
 A multi-agent AI system that analyses CSV and Excel datasets, detects data quality issues, scores your data, and helps you clean it — all through a simple web interface.
 
